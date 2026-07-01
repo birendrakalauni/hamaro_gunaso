@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "59246328547",
+    "firebase_url": "https://hamaro-gunaso-1bb7c-default-rtdb.firebaseio.com",
+    "project_id": "hamaro-gunaso-1bb7c",
+    "storage_bucket": "hamaro-gunaso-1bb7c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:59246328547:android:dc2cb3b0640d535e40a3d6",
+        "android_client_info": {
+          "package_name": "com.biren.hamaro_gunaso"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjIToegYfw-syhtx8Dzj2qwdYu_P1RMyg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
