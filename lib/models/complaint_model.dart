@@ -11,6 +11,7 @@ class ComplaintModel {
   final String adminResponse;
 
   final DateTime? responseDate;
+  final String? imageUrl;
 
   final String updatedBy;
 
@@ -27,6 +28,7 @@ class ComplaintModel {
     this.adminResponse = '',
     this.responseDate,
     this.updatedBy = '',
+    this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -43,6 +45,7 @@ class ComplaintModel {
       'adminResponse': adminResponse,
       'responseDate': responseDate,
       'updatedBy': updatedBy,
+      'imageUrl': imageUrl,
     };
   }
 

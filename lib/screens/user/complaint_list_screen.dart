@@ -12,49 +12,56 @@ class ComplaintListScreen extends StatefulWidget {
 }
 
 class _ComplaintListScreenState extends State<ComplaintListScreen> {
-  String searchQuery = '';
-
-  String selectedStatus = 'All';
-
-  String selectedCategory = 'All';
-
-  String sortBy = 'Newest';
+  String searchQuery = "";
+  String selectedStatus = "All";
+  String selectedCategory = "All";
+  String sortBy = "Newest";
 
   final List<String> statuses = [
-    'All',
-    'Pending',
-    'In Progress',
-    'Resolved',
-    'Rejected',
+    "All",
+    "Pending",
+    "In Progress",
+    "Resolved",
+    "Rejected",
   ];
 
   final List<String> categories = [
-    'All',
-    'Road',
-    'Water',
-    'Electricity',
-    'Sanitation',
-    'Internet',
-    'Other',
+    "All",
+    "Road",
+    "Water",
+    "Electricity",
+    "Sanitation",
+    "Health",
+    "Education",
+    "Infrastructure",
+    "Environment",
+    "Public Safety",
+    "Other",
   ];
 
   Color getStatusColor(String status) {
     switch (status) {
-      case 'Resolved':
+      case "Resolved":
         return Colors.green;
 
-      case 'Rejected':
+      case "Rejected":
         return Colors.red;
 
-      case 'In Progress':
+      case "In Progress":
         return Colors.orange;
 
-      case 'Pending':
+      case "Pending":
         return Colors.blue;
 
       default:
         return Colors.grey;
     }
+  }
+
+  String formatDate(Timestamp timestamp) {
+    final date = timestamp.toDate();
+
+    return "${date.day}/${date.month}/${date.year}";
   }
 
   @override
@@ -63,14 +70,17 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("My Complaints")),
+
       body: Column(
         children: [
+          /// SEARCH BAR
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
               decoration: InputDecoration(
                 hintText: "Search complaints...",
                 prefixIcon: const Icon(Icons.search),
+
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -83,23 +93,25 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
             ),
           ),
 
+          /// FILTERS
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
+
             child: Row(
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: selectedStatus,
+
                     decoration: const InputDecoration(
                       labelText: "Status",
                       border: OutlineInputBorder(),
                     ),
-                    items: statuses.map((status) {
-                      return DropdownMenuItem(
-                        value: status,
-                        child: Text(status),
-                      );
-                    }).toList(),
+
+                    items: statuses
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+
                     onChanged: (value) {
                       setState(() {
                         selectedStatus = value!;
@@ -113,16 +125,16 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: selectedCategory,
+
                     decoration: const InputDecoration(
                       labelText: "Category",
                       border: OutlineInputBorder(),
                     ),
-                    items: categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
+
+                    items: categories
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+
                     onChanged: (value) {
                       setState(() {
                         selectedCategory = value!;
@@ -136,18 +148,24 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
 
           const SizedBox(height: 10),
 
+          /// SORT
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
+
             child: DropdownButtonFormField<String>(
               value: sortBy,
+
               decoration: const InputDecoration(
                 labelText: "Sort",
                 border: OutlineInputBorder(),
               ),
+
               items: const [
                 DropdownMenuItem(value: "Newest", child: Text("Newest First")),
+
                 DropdownMenuItem(value: "Oldest", child: Text("Oldest First")),
               ],
+
               onChanged: (value) {
                 setState(() {
                   sortBy = value!;
@@ -161,9 +179,10 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('complaints')
-                  .where('userId', isEqualTo: currentUser?.uid)
+                  .collection("complaints")
+                  .where("userId", isEqualTo: currentUser?.uid)
                   .snapshots(),
+
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -177,9 +196,12 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
                   return const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+
                       children: [
-                        Icon(Icons.inbox, size: 80, color: Colors.grey),
-                        SizedBox(height: 10),
+                        Icon(Icons.inbox, size: 90, color: Colors.grey),
+
+                        SizedBox(height: 15),
+
                         Text(
                           "No complaints found",
                           style: TextStyle(fontSize: 18),
@@ -194,31 +216,27 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
                 ) {
                   final data = doc.data() as Map<String, dynamic>;
 
-                  final title = data['title'].toString().toLowerCase();
+                  final title = data["title"].toString().toLowerCase();
 
-                  final status = data['status'];
+                  final status = data["status"];
 
-                  final category = data['category'];
+                  final category = data["category"];
 
-                  final searchMatch = title.contains(searchQuery);
-
-                  final statusMatch = selectedStatus == 'All'
-                      ? true
-                      : status == selectedStatus;
-
-                  final categoryMatch = selectedCategory == 'All'
-                      ? true
-                      : category == selectedCategory;
-
-                  return searchMatch && statusMatch && categoryMatch;
+                  return title.contains(searchQuery) &&
+                      (selectedStatus == "All"
+                          ? true
+                          : status == selectedStatus) &&
+                      (selectedCategory == "All"
+                          ? true
+                          : category == selectedCategory);
                 }).toList();
 
                 complaints.sort((a, b) {
-                  Timestamp aTime = a['createdAt'];
+                  Timestamp aTime = a["createdAt"];
 
-                  Timestamp bTime = b['createdAt'];
+                  Timestamp bTime = b["createdAt"];
 
-                  if (sortBy == 'Newest') {
+                  if (sortBy == "Newest") {
                     return bTime.compareTo(aTime);
                   }
 
@@ -232,60 +250,15 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
                 }
 
                 return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 20),
                   itemCount: complaints.length,
+
                   itemBuilder: (context, index) {
                     final complaint = complaints[index];
 
                     final data = complaint.data() as Map<String, dynamic>;
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      elevation: 2,
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: getStatusColor(
-                            data['status'] ?? 'Pending',
-                          ),
-                          child: const Icon(
-                            Icons.report_problem,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        title: Text(data['title'] ?? ''),
-
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(data['category'] ?? ''),
-
-                            const SizedBox(height: 5),
-
-                            Chip(
-                              label: Text(data['status'] ?? 'Pending'),
-                              backgroundColor: getStatusColor(
-                                data['status'] ?? 'Pending',
-                              ).withAlpha(40),
-                            ),
-                          ],
-                        ),
-
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ComplaintDetailsScreen(complaint: data),
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                    return buildComplaintCard(context, data);
                   },
                 );
               },
@@ -295,4 +268,192 @@ class _ComplaintListScreenState extends State<ComplaintListScreen> {
       ),
     );
   }
+}
+
+/// --- COMPLAINT CARD WIDGET ---
+Widget buildComplaintCard(BuildContext context, Map<String, dynamic> data) {
+  final String status = data["status"] ?? "Pending";
+  final String imageUrl = data["imageUrl"] ?? "";
+
+  // Helper method to resolve colors within the independent builder method
+  Color localGetStatusColor(String status) {
+    switch (status) {
+      case "Resolved":
+        return Colors.green;
+      case "Rejected":
+        return Colors.red;
+      case "In Progress":
+        return Colors.orange;
+      case "Pending":
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Helper method to format date within the independent builder method
+  String localFormatDate(Timestamp timestamp) {
+    final date = timestamp.toDate();
+    return "${date.day}/${date.month}/${date.year}";
+  }
+
+  return Card(
+    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ComplaintDetailsScreen(complaint: data),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// Complaint Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      width: 90,
+                      height: 90,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) {
+                        return Container(
+                          width: 90,
+                          height: 90,
+                          color: Colors.grey.shade300,
+                          child: const Icon(Icons.broken_image, size: 40),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 90,
+                      height: 90,
+                      color: Colors.grey.shade300,
+                      child: const Icon(
+                        Icons.image,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
+            ),
+
+            const SizedBox(width: 15),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// Title
+                  Text(
+                    data["title"] ?? "",
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Row(
+                    children: [
+                      const Icon(Icons.category, size: 18, color: Colors.blue),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text(data["category"] ?? "")),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        size: 18,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          data["location"] ?? "",
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+                      /// Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: localGetStatusColor(status).withOpacity(.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          status,
+                          style: TextStyle(
+                            color: localGetStatusColor(status),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      if (data["createdAt"] != null)
+                        Text(
+                          localFormatDate(data["createdAt"]),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                            // Dynamic formatting local to function
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ComplaintDetailsScreen(complaint: data),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.arrow_forward, size: 18),
+                      label: const Text("View Details"),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

@@ -14,6 +14,7 @@ class ComplaintService {
     required String category,
     required String description,
     required String location,
+    String? imageUrl,
   }) async {
     final user = _auth.currentUser;
 
