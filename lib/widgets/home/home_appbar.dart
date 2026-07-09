@@ -19,17 +19,24 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 237, 238, 231),
+      surfaceTintColor: const Color.fromARGB(255, 83, 69, 231),
       elevation: 1,
       automaticallyImplyLeading: false,
 
-      title: const Text(
-        "Hamaro Gunaso",
-        style: TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.bold,
-          fontSize: 24,
+      title: RichText(
+        text: const TextSpan(
+          style: TextStyle(fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
+          children: [
+            TextSpan(
+              text: 'Hamaro ',
+              style: TextStyle(fontSize: 24, color: Color(0xFF111827)),
+            ),
+            TextSpan(
+              text: 'Gunaso',
+              style: TextStyle(fontSize: 26, color: Color(0xFF111827)),
+            ),
+          ],
         ),
       ),
 
@@ -46,17 +53,41 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
         Padding(
           padding: const EdgeInsets.only(right: 20),
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.login);
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF60A5FA), Color(0xFF2563EB)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, AppRoutes.login);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                "Log In / Sign Up",
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
-            child: const Text("Log In / Sign Up"),
           ),
         ),
       ],
