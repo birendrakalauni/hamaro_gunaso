@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'models/complaint_filter_model.dart';
 import 'widgets/complaint_filters.dart';
+import 'admin_complaint_details_screen.dart';
 
 class ManageComplaintsScreen extends StatefulWidget {
   const ManageComplaintsScreen({super.key});
@@ -13,6 +14,8 @@ class ManageComplaintsScreen extends StatefulWidget {
 
 class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
   final ComplaintFilterModel filter = ComplaintFilterModel();
+
+  final Map<String, TextEditingController> responseControllers = {};
 
   final List<String> statuses = [
     "All",
@@ -117,7 +120,9 @@ class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
             ),
           ),
 
+          /// ==============================
           /// COMPLAINT LIST
+          /// ==============================
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -244,13 +249,35 @@ class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
     final String status = data["status"] ?? "Pending";
     final String imageUrl = data["imageUrl"] ?? "";
 
+    final controller = responseControllers.putIfAbsent(
+      complaintId,
+      () => TextEditingController(text: data["adminResponse"] ?? ""),
+    );
+
+    final bool hasResponse = (data["adminResponse"] ?? "")
+        .toString()
+        .trim()
+        .isNotEmpty;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       clipBehavior: Clip.antiAlias,
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.all(12),
+      child: ListTile(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AdminComplaintDetailsScreen(
+                complaintId: complaintId,
+                complaint: data,
+              ),
+            ),
+          );
+        },
+
+        contentPadding: const EdgeInsets.all(12),
 
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -336,137 +363,6 @@ class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
             ),
           ],
         ),
-
-        childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-
-        children: [
-          const Divider(),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            "Complaint Description",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-
-          const SizedBox(height: 6),
-
-          Text(data["description"] ?? "", style: const TextStyle(height: 1.5)),
-
-          const SizedBox(height: 20),
-
-          if (imageUrl.isNotEmpty) ...[
-            const Text(
-              "Complaint Image",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-
-            const SizedBox(height: 10),
-
-            InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => Scaffold(
-                      appBar: AppBar(title: const Text("Complaint Image")),
-                      body: InteractiveViewer(
-                        child: Center(child: Image.network(imageUrl)),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  imageUrl,
-                  width: double.infinity,
-                  height: 220,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-          ],
-
-          Row(
-            children: [
-              const Icon(Icons.calendar_today, size: 18),
-
-              const SizedBox(width: 8),
-
-              Expanded(
-                child: Text("Created: ${formatDate(data["createdAt"])}"),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          if (data["updatedAt"] != null)
-            Row(
-              children: [
-                const Icon(Icons.update, size: 18),
-
-                const SizedBox(width: 8),
-
-                Expanded(
-                  child: Text("Updated: ${formatDate(data["updatedAt"])}"),
-                ),
-              ],
-            ),
-
-          const SizedBox(height: 20),
-
-          DropdownButtonFormField<String>(
-            value: status,
-
-            decoration: InputDecoration(
-              labelText: "Update Status",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-
-            items: const [
-              DropdownMenuItem(value: "Pending", child: Text("Pending")),
-
-              DropdownMenuItem(
-                value: "In Progress",
-                child: Text("In Progress"),
-              ),
-
-              DropdownMenuItem(value: "Resolved", child: Text("Resolved")),
-
-              DropdownMenuItem(value: "Rejected", child: Text("Rejected")),
-            ],
-
-            onChanged: (value) {
-              if (value == null) return;
-
-              updateStatus(complaintId, value);
-            },
-          ),
-
-          const SizedBox(height: 20),
-
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () {
-                deleteComplaint(complaintId);
-              },
-              icon: const Icon(Icons.delete),
-              label: const Text("Delete Complaint"),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-        ],
       ),
     );
   }

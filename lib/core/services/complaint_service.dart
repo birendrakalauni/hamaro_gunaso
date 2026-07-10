@@ -82,7 +82,7 @@ class ComplaintService {
       'adminResponse': response,
       'responseDate': DateTime.now(),
       'updatedBy': _auth.currentUser!.uid,
-      'updatedAt': DateTime.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 }
