@@ -22,7 +22,7 @@ class AppRoutes {
   static const String complaints = '/complaints';
   static const String complaintDetails = '/complaintDetails';
   static const String profile = '/profile';
-  static const home = '/';
+  static const home = '/home';
 
   // Routes Map
   static Map<String, WidgetBuilder> routes = {
