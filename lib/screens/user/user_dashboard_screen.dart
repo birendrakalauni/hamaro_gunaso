@@ -162,7 +162,7 @@ class UserDashboardScreen extends StatelessWidget {
               if (context.mounted) {
                 Navigator.pushNamedAndRemoveUntil(
                   context,
-                  AppRoutes.login,
+                  AppRoutes.home,
                   (route) => false,
                 );
               }

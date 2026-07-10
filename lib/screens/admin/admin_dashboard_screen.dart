@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamaro_gunaso/screens/home/home_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/services/dashboard_service.dart';
@@ -59,7 +60,7 @@ class AdminDashboardScreen extends StatelessWidget {
 
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
                 (route) => false,
               );
             },
