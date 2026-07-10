@@ -34,6 +34,7 @@ class ComplaintService {
       status: "Pending",
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      imageUrl: imageUrl,
     );
 
     await _firestore
