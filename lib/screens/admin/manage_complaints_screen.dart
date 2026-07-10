@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'models/complaint_filter_model.dart';
+import 'widgets/complaint_filters.dart';
 
 class ManageComplaintsScreen extends StatefulWidget {
   const ManageComplaintsScreen({super.key});
@@ -10,8 +12,7 @@ class ManageComplaintsScreen extends StatefulWidget {
 }
 
 class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
-  String searchQuery = "";
-  String selectedStatus = "All";
+  final ComplaintFilterModel filter = ComplaintFilterModel();
 
   final List<String> statuses = [
     "All",
@@ -106,58 +107,17 @@ class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
 
       body: Column(
         children: [
-          /// ==============================
-          /// SEARCH BAR
-          /// ==============================
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search complaints...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-              ),
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.toLowerCase().trim();
-                });
+            child: ComplaintFilters(
+              filter: filter,
+              onChanged: () {
+                setState(() {});
               },
             ),
           ),
 
-          /// ==============================
-          /// STATUS FILTER
-          /// ==============================
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: DropdownButtonFormField<String>(
-              value: selectedStatus,
-              decoration: InputDecoration(
-                labelText: "Filter by Status",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              items: statuses.map((status) {
-                return DropdownMenuItem(value: status, child: Text(status));
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedStatus = value!;
-                });
-              },
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
-          /// ==============================
           /// COMPLAINT LIST
-          /// ==============================
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -201,13 +161,39 @@ class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
 
                   final status = data["status"] ?? "Pending";
 
-                  final searchMatch = title.contains(searchQuery);
+                  final searchMatch = title.contains(filter.searchQuery);
 
-                  final statusMatch = selectedStatus == "All"
+                  final statusMatch = filter.selectedStatus == "All"
                       ? true
-                      : status == selectedStatus;
+                      : status == filter.selectedStatus;
 
-                  return searchMatch && statusMatch;
+                  final categoryMatch = filter.selectedCategory == "All"
+                      ? true
+                      : data["category"] == filter.selectedCategory;
+
+                  bool dateMatch = true;
+
+                  if (filter.selectedDateRange != null &&
+                      data["createdAt"] is Timestamp) {
+                    final created = (data["createdAt"] as Timestamp).toDate();
+
+                    dateMatch =
+                        created.isAfter(
+                          filter.selectedDateRange!.start.subtract(
+                            const Duration(days: 1),
+                          ),
+                        ) &&
+                        created.isBefore(
+                          filter.selectedDateRange!.end.add(
+                            const Duration(days: 1),
+                          ),
+                        );
+                  }
+
+                  return searchMatch &&
+                      statusMatch &&
+                      categoryMatch &&
+                      dateMatch;
                 }).toList();
 
                 if (complaints.isEmpty) {
@@ -218,6 +204,20 @@ class _ManageComplaintsScreenState extends State<ManageComplaintsScreen> {
                     ),
                   );
                 }
+
+                complaints.sort((a, b) {
+                  final dataA = a.data() as Map<String, dynamic>;
+                  final dataB = b.data() as Map<String, dynamic>;
+
+                  final Timestamp timeA = dataA["createdAt"];
+                  final Timestamp timeB = dataB["createdAt"];
+
+                  if (filter.sortBy == "Newest") {
+                    return timeB.compareTo(timeA);
+                  }
+
+                  return timeA.compareTo(timeB);
+                });
 
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 20),
