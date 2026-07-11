@@ -20,20 +20,23 @@ class AdminComplaintDetailsScreen extends StatefulWidget {
 class _AdminComplaintDetailsScreenState
     extends State<AdminComplaintDetailsScreen> {
   late String selectedStatus;
-
   late TextEditingController responseController;
-
   bool isSaving = false;
+
+  /// NEW
+  bool responseAlreadySaved = false;
 
   @override
   void initState() {
     super.initState();
-
     selectedStatus = widget.complaint["status"] ?? "Pending";
-
     responseController = TextEditingController(
       text: widget.complaint["adminResponse"] ?? "",
     );
+    responseAlreadySaved = (widget.complaint["adminResponse"] ?? "")
+        .toString()
+        .trim()
+        .isNotEmpty;
   }
 
   @override
@@ -46,13 +49,10 @@ class _AdminComplaintDetailsScreenState
     switch (status) {
       case "Resolved":
         return Colors.green;
-
       case "Rejected":
         return Colors.red;
-
       case "In Progress":
         return Colors.orange;
-
       default:
         return Colors.blue;
     }
@@ -60,19 +60,18 @@ class _AdminComplaintDetailsScreenState
 
   String formatDate(dynamic value) {
     if (value == null) return "N/A";
-
     if (value is Timestamp) {
       return DateFormat("dd MMM yyyy • hh:mm a").format(value.toDate());
     }
-
     if (value is String) {
       return DateFormat("dd MMM yyyy • hh:mm a").format(DateTime.parse(value));
     }
-
     return value.toString();
   }
 
   Future<void> saveResponse() async {
+    if (responseAlreadySaved) return;
+
     setState(() {
       isSaving = true;
     });
@@ -89,12 +88,12 @@ class _AdminComplaintDetailsScreenState
 
     setState(() {
       isSaving = false;
+      responseAlreadySaved = true;
     });
 
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Complaint updated successfully")),
+      const SnackBar(content: Text("Response submitted successfully.")),
     );
   }
 
@@ -128,18 +127,41 @@ class _AdminComplaintDetailsScreenState
         .delete();
 
     if (!mounted) return;
-
     Navigator.pop(context);
-
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text("Complaint deleted")));
   }
 
+  Widget buildInfo(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.blue, size: 20),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 90,
+            child: Text(
+              "$title:",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(child: Text(value, style: const TextStyle(height: 1.4))),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = widget.complaint;
+
     final imageUrl = data["imageUrl"] ?? "";
+
+    final bool complaintClosed =
+        selectedStatus == "Resolved" || selectedStatus == "Rejected";
 
     return Scaffold(
       appBar: AppBar(title: const Text("Complaint Details"), centerTitle: true),
@@ -148,7 +170,7 @@ class _AdminComplaintDetailsScreenState
         padding: const EdgeInsets.all(18),
 
         child: Card(
-          elevation: 5,
+          elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -158,155 +180,148 @@ class _AdminComplaintDetailsScreenState
 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+
               children: [
-                /// Title
                 Text(
                   data["title"] ?? "",
                   style: const TextStyle(
-                    fontSize: 25,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
 
                 const SizedBox(height: 15),
 
-                Chip(
-                  label: Text(selectedStatus),
-                  backgroundColor: getStatusColor(
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 8,
+                  ),
+
+                  decoration: BoxDecoration(
+                    color: getStatusColor(selectedStatus).withOpacity(.15),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+
+                  child: Text(
                     selectedStatus,
-                  ).withOpacity(.15),
-                  side: BorderSide(color: getStatusColor(selectedStatus)),
+                    style: TextStyle(
+                      color: getStatusColor(selectedStatus),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 25),
 
-                /// IMAGE
-                const Text(
-                  "Complaint Image",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
+                if (imageUrl.toString().isNotEmpty) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
 
-                const SizedBox(height: 12),
-
-                if (imageUrl.isNotEmpty)
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => Scaffold(
-                            appBar: AppBar(),
-
-                            body: InteractiveViewer(
-                              child: Center(child: Image.network(imageUrl)),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-
-                      child: Image.network(
-                        imageUrl,
-                        width: double.infinity,
-                        height: 240,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.image, size: 60),
-                        SizedBox(height: 10),
-                        Text("No Image Uploaded"),
-                      ],
+                    child: Image.network(
+                      imageUrl,
+                      width: double.infinity,
+                      height: 240,
+                      fit: BoxFit.cover,
                     ),
                   ),
 
+                  const SizedBox(height: 25),
+                ],
+
+                buildInfo(Icons.category, "Category", data["category"] ?? ""),
+
+                buildInfo(
+                  Icons.location_on,
+                  "Location",
+                  data["location"] ?? "",
+                ),
+
+                buildInfo(
+                  Icons.calendar_today,
+                  "Created",
+                  formatDate(data["createdAt"]),
+                ),
+
+                buildInfo(
+                  Icons.update,
+                  "Updated",
+                  formatDate(data["updatedAt"]),
+                ),
+
                 const SizedBox(height: 25),
-
-                const Divider(),
-
-                buildInfo("Category", data["category"]),
-
-                buildInfo("Location", data["location"]),
-
-                buildInfo("Created", formatDate(data["createdAt"])),
-
-                buildInfo("Updated", formatDate(data["updatedAt"])),
-
-                const SizedBox(height: 20),
 
                 const Text(
                   "Complaint Description",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
                 Text(
                   data["description"] ?? "",
                   style: const TextStyle(height: 1.6),
                 ),
 
-                const SizedBox(height: 25),
-
-                const Divider(),
+                const SizedBox(height: 30),
 
                 DropdownButtonFormField<String>(
                   value: selectedStatus,
 
-                  decoration: const InputDecoration(
-                    labelText: "Update Status",
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: "Complaint Status",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
 
                   items: const [
                     DropdownMenuItem(value: "Pending", child: Text("Pending")),
+
                     DropdownMenuItem(
                       value: "In Progress",
                       child: Text("In Progress"),
                     ),
+
                     DropdownMenuItem(
                       value: "Resolved",
                       child: Text("Resolved"),
                     ),
+
                     DropdownMenuItem(
                       value: "Rejected",
                       child: Text("Rejected"),
                     ),
                   ],
 
-                  onChanged: (value) {
-                    setState(() {
-                      selectedStatus = value!;
-                    });
-                  },
+                  onChanged: complaintClosed
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+
+                          setState(() {
+                            selectedStatus = value;
+                          });
+                        },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 25),
 
                 TextField(
                   controller: responseController,
+
+                  readOnly: responseAlreadySaved || complaintClosed,
+
                   maxLines: 5,
 
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "Admin Response",
-                    hintText: "Write your response...",
-                    border: OutlineInputBorder(),
+
+                    hintText: "Write response for citizen...",
+
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
 
@@ -316,24 +331,39 @@ class _AdminComplaintDetailsScreenState
                   width: double.infinity,
 
                   child: FilledButton.icon(
-                    onPressed: isSaving ? null : saveResponse,
+                    onPressed:
+                        responseAlreadySaved || complaintClosed || isSaving
+                        ? null
+                        : saveResponse,
 
                     icon: isSaving
                         ? const SizedBox(
-                            width: 18,
-                            height: 18,
+                            width: 20,
+                            height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.save),
+                        : Icon(
+                            responseAlreadySaved
+                                ? Icons.check_circle
+                                : complaintClosed
+                                ? Icons.lock
+                                : Icons.send,
+                          ),
 
-                    label: const Text("Save Response"),
+                    label: Text(
+                      responseAlreadySaved
+                          ? "Response Submitted"
+                          : complaintClosed
+                          ? "Complaint Closed"
+                          : "Save Response",
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 15),
 
                 SizedBox(
                   width: double.infinity,
@@ -352,29 +382,6 @@ class _AdminComplaintDetailsScreenState
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget buildInfo(String title, dynamic value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-          SizedBox(
-            width: 110,
-
-            child: Text(
-              "$title:",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-
-          Expanded(child: Text(value?.toString() ?? "")),
-        ],
       ),
     );
   }
