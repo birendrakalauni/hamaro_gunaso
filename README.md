@@ -29,6 +29,26 @@ A modern Flutter-based Public Issue Reporting System that enables citizens to su
 * Delete Complaints
 * Real-time Firestore Updates
 
+## Screenshots
+
+### Home Screen
+![Home](screenshots/home.png)
+
+### Login Screen
+![Login](screenshots/login.png)
+
+### Submit Complaint
+![Submit Complaint](screenshots/submit_complaint.png)
+
+### Manage Complaints
+
+![Manage Complaints](screenshots/manage_complaints.png)
+
+### My Complaints
+
+![My Complaints](screenshots/my_complaints.png)
+
+
 ## Tech Stack
 
 * **Frontend:** Flutter, Dart
