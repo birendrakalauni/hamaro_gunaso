@@ -310,9 +310,7 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 30),
 
-                /// ==========================
-                /// STATUS UPDATE (Fix 1 Applied)
-                /// ==========================
+                /// STATUS UPDATE
                 DropdownButtonFormField<String>(
                   value: selectedStatus,
                   decoration: InputDecoration(
@@ -357,9 +355,7 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 25),
 
-                /// ==========================
                 /// ADMIN RESPONSE
-                /// ==========================
                 TextField(
                   controller: responseController,
                   readOnly: complaintClosed,
@@ -376,9 +372,7 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 25),
 
-                /// ==========================
                 /// SAVE RESPONSE
-                /// ==========================
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -403,9 +397,7 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 15),
 
-                /// ==========================
                 /// DELETE COMPLAINT
-                /// ==========================
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
