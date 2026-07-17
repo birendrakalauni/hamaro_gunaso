@@ -21,22 +21,18 @@ class _AdminComplaintDetailsScreenState
     extends State<AdminComplaintDetailsScreen> {
   late String selectedStatus;
   late TextEditingController responseController;
-  bool isSaving = false;
 
-  /// NEW
-  bool responseAlreadySaved = false;
+  bool isSaving = false;
 
   @override
   void initState() {
     super.initState();
+
     selectedStatus = widget.complaint["status"] ?? "Pending";
+
     responseController = TextEditingController(
       text: widget.complaint["adminResponse"] ?? "",
     );
-    responseAlreadySaved = (widget.complaint["adminResponse"] ?? "")
-        .toString()
-        .trim()
-        .isNotEmpty;
   }
 
   @override
@@ -49,10 +45,13 @@ class _AdminComplaintDetailsScreenState
     switch (status) {
       case "Resolved":
         return Colors.green;
+
       case "Rejected":
         return Colors.red;
+
       case "In Progress":
         return Colors.orange;
+
       default:
         return Colors.blue;
     }
@@ -60,18 +59,28 @@ class _AdminComplaintDetailsScreenState
 
   String formatDate(dynamic value) {
     if (value == null) return "N/A";
+
     if (value is Timestamp) {
       return DateFormat("dd MMM yyyy • hh:mm a").format(value.toDate());
     }
+
     if (value is String) {
       return DateFormat("dd MMM yyyy • hh:mm a").format(DateTime.parse(value));
     }
+
     return value.toString();
   }
 
-  Future<void> saveResponse() async {
-    if (responseAlreadySaved) return;
+  /// Fix 1: Method to update complaint status in Firestore instantly
+  Future<void> updateComplaintStatus(String status) async {
+    await FirebaseFirestore.instance
+        .collection("complaints")
+        .doc(widget.complaintId)
+        .update({"status": status, "updatedAt": FieldValue.serverTimestamp()});
+  }
 
+  /// Fix 2: Saves ONLY the admin response and dates (status is handled on dropdown change)
+  Future<void> saveResponse() async {
     setState(() {
       isSaving = true;
     });
@@ -80,7 +89,6 @@ class _AdminComplaintDetailsScreenState
         .collection("complaints")
         .doc(widget.complaintId)
         .update({
-          "status": selectedStatus,
           "adminResponse": responseController.text.trim(),
           "responseDate": FieldValue.serverTimestamp(),
           "updatedAt": FieldValue.serverTimestamp(),
@@ -88,12 +96,12 @@ class _AdminComplaintDetailsScreenState
 
     setState(() {
       isSaving = false;
-      responseAlreadySaved = true;
     });
 
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Response submitted successfully.")),
+      const SnackBar(content: Text("Response saved successfully.")),
     );
   }
 
@@ -127,10 +135,12 @@ class _AdminComplaintDetailsScreenState
         .delete();
 
     if (!mounted) return;
+
     Navigator.pop(context);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Complaint deleted")));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Complaint deleted successfully.")),
+    );
   }
 
   Widget buildInfo(IconData icon, String title, String value) {
@@ -140,7 +150,9 @@ class _AdminComplaintDetailsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: Colors.blue, size: 20),
+
           const SizedBox(width: 12),
+
           SizedBox(
             width: 90,
             child: Text(
@@ -148,6 +160,7 @@ class _AdminComplaintDetailsScreenState
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
+
           Expanded(child: Text(value, style: const TextStyle(height: 1.4))),
         ],
       ),
@@ -158,7 +171,7 @@ class _AdminComplaintDetailsScreenState
   Widget build(BuildContext context) {
     final data = widget.complaint;
 
-    final imageUrl = data["imageUrl"] ?? "";
+    final String imageUrl = data["imageUrl"] ?? "";
 
     final bool complaintClosed =
         selectedStatus == "Resolved" || selectedStatus == "Rejected";
@@ -171,6 +184,7 @@ class _AdminComplaintDetailsScreenState
 
         child: Card(
           elevation: 4,
+
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -182,6 +196,7 @@ class _AdminComplaintDetailsScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
+                /// Complaint Title
                 Text(
                   data["title"] ?? "",
                   style: const TextStyle(
@@ -192,6 +207,7 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 15),
 
+                /// Status Badge
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 15,
@@ -214,7 +230,8 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 25),
 
-                if (imageUrl.toString().isNotEmpty) ...[
+                /// Complaint Image
+                if (imageUrl.isNotEmpty) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(15),
 
@@ -223,12 +240,30 @@ class _AdminComplaintDetailsScreenState
                       width: double.infinity,
                       height: 240,
                       fit: BoxFit.cover,
+
+                      errorBuilder: (_, __, ___) {
+                        return Container(
+                          height: 240,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 80,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
 
                   const SizedBox(height: 25),
                 ],
 
+                /// Complaint Information
                 buildInfo(Icons.category, "Category", data["category"] ?? ""),
 
                 buildInfo(
@@ -258,67 +293,81 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 10),
 
-                Text(
-                  data["description"] ?? "",
-                  style: const TextStyle(height: 1.6),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(15),
+
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+
+                  child: Text(
+                    data["description"] ?? "",
+                    style: const TextStyle(height: 1.6, fontSize: 15),
+                  ),
                 ),
 
                 const SizedBox(height: 30),
 
+                /// ==========================
+                /// STATUS UPDATE (Fix 1 Applied)
+                /// ==========================
                 DropdownButtonFormField<String>(
                   value: selectedStatus,
-
                   decoration: InputDecoration(
                     labelText: "Complaint Status",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-
                   items: const [
                     DropdownMenuItem(value: "Pending", child: Text("Pending")),
-
                     DropdownMenuItem(
                       value: "In Progress",
                       child: Text("In Progress"),
                     ),
-
                     DropdownMenuItem(
                       value: "Resolved",
                       child: Text("Resolved"),
                     ),
-
                     DropdownMenuItem(
                       value: "Rejected",
                       child: Text("Rejected"),
                     ),
                   ],
-
                   onChanged: complaintClosed
                       ? null
-                      : (value) {
+                      : (value) async {
                           if (value == null) return;
 
                           setState(() {
                             selectedStatus = value;
                           });
+
+                          await updateComplaintStatus(value);
+
+                          if (!mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Status changed to $value")),
+                          );
                         },
                 ),
 
                 const SizedBox(height: 25),
 
+                /// ==========================
+                /// ADMIN RESPONSE
+                /// ==========================
                 TextField(
                   controller: responseController,
-
-                  readOnly: responseAlreadySaved || complaintClosed,
-
+                  readOnly: complaintClosed,
                   maxLines: 5,
-
                   decoration: InputDecoration(
                     labelText: "Admin Response",
-
-                    hintText: "Write response for citizen...",
-
+                    hintText:
+                        "Provide an update or explanation for the citizen...",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -327,15 +376,15 @@ class _AdminComplaintDetailsScreenState
 
                 const SizedBox(height: 25),
 
+                /// ==========================
+                /// SAVE RESPONSE
+                /// ==========================
                 SizedBox(
                   width: double.infinity,
-
                   child: FilledButton.icon(
-                    onPressed:
-                        responseAlreadySaved || complaintClosed || isSaving
+                    onPressed: complaintClosed || isSaving
                         ? null
                         : saveResponse,
-
                     icon: isSaving
                         ? const SizedBox(
                             width: 20,
@@ -345,39 +394,29 @@ class _AdminComplaintDetailsScreenState
                               color: Colors.white,
                             ),
                           )
-                        : Icon(
-                            responseAlreadySaved
-                                ? Icons.check_circle
-                                : complaintClosed
-                                ? Icons.lock
-                                : Icons.send,
-                          ),
-
+                        : Icon(complaintClosed ? Icons.lock : Icons.send),
                     label: Text(
-                      responseAlreadySaved
-                          ? "Response Submitted"
-                          : complaintClosed
-                          ? "Complaint Closed"
-                          : "Save Response",
+                      complaintClosed ? "Complaint Closed" : "Save Response",
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 15),
 
+                /// ==========================
+                /// DELETE COMPLAINT
+                /// ==========================
                 SizedBox(
                   width: double.infinity,
-
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(backgroundColor: Colors.red),
-
                     onPressed: deleteComplaint,
-
                     icon: const Icon(Icons.delete),
-
                     label: const Text("Delete Complaint"),
                   ),
                 ),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
