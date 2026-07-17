@@ -41,11 +41,9 @@ A modern Flutter-based Public Issue Reporting System that enables citizens to su
 ![Submit Complaint](screenshots/submit_complaint.png)
 
 ### Manage Complaints
-
 ![Manage Complaints](screenshots/manage_complaints.png)
 
 ### My Complaints
-
 ![My Complaints](screenshots/my_complaints.png)
 
 
