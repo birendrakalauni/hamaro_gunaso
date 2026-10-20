@@ -129,4 +129,4 @@ LinkedIn: https://www.linkedin.com/in/birendra-kalauni-297139261/
 
 ## License
 
-This software project is developed for educational purposes. Feel free to use and modify it for learning and research.
+This software project is developed for educational purposes.
